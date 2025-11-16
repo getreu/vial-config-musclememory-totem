@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 
-#define VIAL_KEYBOARD_UID {0x62, 0xDB, 0xC0, 0x05, 0x7F, 0x34, 0xDD, 0x20}
+#define VIAL_KEYBOARD_UID {0x80, 0xD7, 0x5F, 0xD9, 0x25, 0x60, 0xAB, 0x3A}
 
 #define VIAL_UNLOCK_COMBO_ROWS \
     { 0, 4 }
@@ -20,3 +20,4 @@
 #undef LOCKING_RESYNC_ENABLE
 
 #define DYNAMIC_KEYMAP_LAYER_COUNT 16
+
