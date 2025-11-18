@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 
+// Generate this line with:
+//     python3 util/vial_generate_keyboard_uid.py
 #define VIAL_KEYBOARD_UID {0x80, 0xD7, 0x5F, 0xD9, 0x25, 0x60, 0xAB, 0x3A}
 
 #define VIAL_UNLOCK_COMBO_ROWS \
