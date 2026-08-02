@@ -1,285 +1,198 @@
-/*
-                                             ▀▀▀▀▀     ▀▀▀▀▀          ▀▀█▀▀
-                                             ▄▀▀▀▄  ▄  ▄▀▀▀▄  ▄  ▄▀▀▀▄  █  ▄▀▀▀▄
-                                             █   █  █  █   █  █  █   █  █  █   █
-                                              ▀▀▀   █   ▀▀▀   █   ▀▀▀   ▀   ▀▀▀
-                                                    █      ▄▄▄█▄▄▄    █   █
-                                                    ▀      █  █  █     █▄█
-                                                  ▀▀▀▀▀    █  █  █      ▀
-                                                           ▀  ▀  ▀  D E F A U L T
-
-▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-*/
+// Copyright 2024 (@getreu)
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include QMK_KEYBOARD_H
 
-// ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-// │ D E F I N I T I O N S                                                                                                  │
-// └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-// ▝▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▘
+#ifdef VIAL_COMBO_ENABLE
+#include "vial.h"
+#include "dynamic_keymap.h"
+#endif
 
-// ┌─────────────────────────────────────────────────┐
-// │ d e f i n e   l a y e r s                       │
-// └─────────────────────────────────────────────────┘
+#ifdef VIAL_TAP_DANCE_ENABLE
+#include "vial.h"
+#include "dynamic_keymap.h"
+#endif
 
-enum totem_layers {
-    _QWERTY,
-    _COLEMAK,
-    _LOWER,
-    _RAISE,
-    _ADJUST,
-};
+/**
+ * VIAL-OPTIMIZED KEYMAP FOR TOTEM
+ *
+ * Muscle memory friendly layout v1.4.2, ported from the Cheapino vial target.
+ * The TOTEM has 38 keys (no center encoder key, two extra outer bottom keys)
+ * and no RGB, so the center key is dropped, the outer keys carry
+ * LSFT_T(KC_TAB) / RSFT_T(KC_ENTER) on the base layer, and the RGB keys are
+ * replaced by KC_NO.
+ *
+ * Tap dance and combos are configured via Vial's dynamic system and loaded on
+ * EEPROM reset via eeconfig_init_user().
+ */
 
-// ┌─────────────────────────────────────────────────┐
-// │ d e f i n e   k e y c o d e s                   │
-// └─────────────────────────────────────────────────┘
+/**
+ * LAYER DEFINITIONS
+ */
+enum layers { _BASE = 0, _L1, _L2, _L3, _L4, _L5, _L6, _L7 };
 
-enum custom_keycodes { COLEMAK = SAFE_RANGE, QWERTY, LOWER, RAISE, ADJUST, OS_SWAP, MAKE_H, SNAP };
+/**
+ * EEPROM INITIALIZATION - Set Default Combos and Tap Dances
+ * This runs when EEPROM is reset (first flash or reset command).
+ * Combos and tap dances are stored in EEPROM and can be reconfigured via Vial.
+ */
+#if defined(VIAL_COMBO_ENABLE) || defined(VIAL_TAP_DANCE_ENABLE)
+void eeconfig_init_user(void) {
 
-// ┌─────────────────────────────────────────────────┐
-// │ d e f i n e   m a c r o n a m e s               │
-// └─────────────────────────────────────────────────┘
+#ifdef VIAL_COMBO_ENABLE
+    // Load Dynamic Combos (these write to EEPROM)
+    vial_combo_entry_t combo = {0};
 
-// LEFT HAND HOME ROW MODS QWERTY ├──────────────────┐
+    // Combo 0: Space + Enter -> Layer 7
+    combo.input[0] = LGUI_T(KC_SPC);
+    combo.input[1] = LGUI_T(KC_ENT);
+    combo.output = MO(_L7);
+    dynamic_keymap_set_combo(0, &combo);
 
-#define GUI_A MT(MOD_LGUI, KC_A)
-#define ALT_S MT(MOD_LALT, KC_S)
-#define CTL_D MT(MOD_LCTL, KC_D)
-#define SHT_F MT(MOD_LSFT, KC_F)
+    // Combo 1: V + Space -> Layer 7
+    combo.input[0] = RGUI_T(KC_V);
+    combo.input[1] = LGUI_T(KC_SPC);
+    combo.output = MO(_L7);
+    dynamic_keymap_set_combo(1, &combo);
 
-// RIGHT HAND HOME ROW MODS QWERTY ├─────────────────┐
+    // Combo 2: M + Enter -> Layer 7
+    combo.input[0] = RGUI_T(KC_M);
+    combo.input[1] = LGUI_T(KC_ENT);
+    combo.output = MO(_L7);
+    dynamic_keymap_set_combo(2, &combo);
 
-#define SHT_J MT(MOD_RSFT, KC_J)
-#define CTL_K MT(MOD_LCTL, KC_K)
-#define ALT_L MT(MOD_LALT, KC_L)
-#define GUI_S MT(MOD_LGUI, KC_SCLN)
+    // Combo 3: ESC + Backspace -> Go to Layer 3
+    combo.input[0] = LT(_L6, KC_ESC);
+    combo.input[1] = LT(_L5, KC_BSPC);
+    combo.output = TO(_L3);
+    dynamic_keymap_set_combo(3, &combo);
 
-// LEFT HAND HOME ROW MODS COLEMAK ├─────────────────┐
+    // Combo 6: TD(2) + Backspace -> Go to Layer 3 (stay in symbol layer from L3)
+    combo.input[0] = TD(2);
+    combo.input[1] = LT(_L5, KC_BSPC);
+    combo.output = TO(_L3);
+    dynamic_keymap_set_combo(6, &combo);
 
-#define GUI_A MT(MOD_LGUI, KC_A)
-#define ALT_R MT(MOD_LALT, KC_R)
-#define CTL_S MT(MOD_LCTL, KC_S)
-#define SHT_T MT(MOD_LSFT, KC_T)
+    // Combo 4 & 5: Outer thumbs -> Caps Lock
+    combo.input[0] = OSL(_L4); combo.input[1] = TD(0);
+    combo.output = KC_CAPS_LOCK;
+    dynamic_keymap_set_combo(4, &combo);
 
-// RIGHT HAND HOME ROW MODS COLEMAK ├────────────────┐
+    combo.input[0] = OSL(_L4); combo.input[1] = TD(1);
+    combo.output = KC_CAPS_LOCK;
+    dynamic_keymap_set_combo(5, &combo);
+#endif
 
-#define SHT_N MT(MOD_RSFT, KC_N)
-#define CTL_E MT(MOD_LCTL, KC_E)
-#define ALT_I MT(MOD_LALT, KC_I)
-#define GUI_O MT(MOD_LGUI, KC_O)
+#ifdef VIAL_TAP_DANCE_ENABLE
+    // Load Dynamic Tap Dances
+    vial_tap_dance_entry_t td = {0};
 
-#define LOWER LT(_LOWER, KC_TAB)
-#define RAISE LT(_RAISE, KC_ESC)
-#define ADJUST MO(_ADJUST)
+    // TD 0: APP / MO(_L2) momentary / TO(_L2) double-tap
+    td.on_tap = KC_APP;
+    td.on_hold = MO(_L2);
+    td.on_double_tap = TO(_L2);
+    td.custom_tapping_term = 350;
+    dynamic_keymap_set_tap_dance(0, &td);
 
-// ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-// │ K E Y M A P S                                                                                                          │
-// └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-// ▝▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▘
+    // TD 1: TO(0) / MO(_L2) momentary / TO(_L2) double-tap
+    td.on_tap = TO(0);
+    td.on_hold = MO(_L2);
+    td.on_double_tap = TO(_L2);
+    td.custom_tapping_term = 350;
+    dynamic_keymap_set_tap_dance(1, &td);
 
+    // TD 2: TO(0) / MO(_L6)
+    td.on_tap = TO(0); td.on_hold = MO(_L6); td.on_double_tap = KC_NO;
+    td.custom_tapping_term = 350;
+    dynamic_keymap_set_tap_dance(2, &td);
+
+    // TD 3: KC_KP_PLUS (tap) / KC_PAST (hold) / KC_KP_PLUS (tap-hold, repeating)
+    td.on_tap = KC_KP_PLUS; td.on_hold = KC_PAST; td.on_double_tap = KC_NO; td.on_tap_hold = KC_KP_PLUS;
+    td.custom_tapping_term = 200;
+    dynamic_keymap_set_tap_dance(3, &td);
+
+    // TD 4: KC_KP_MINUS (tap) / KC_PSLS (hold) / KC_KP_MINUS (tap-hold, repeating)
+    td.on_tap = KC_KP_MINUS; td.on_hold = KC_PSLS; td.on_double_tap = KC_NO; td.on_tap_hold = KC_KP_MINUS;
+    td.custom_tapping_term = 200;
+    dynamic_keymap_set_tap_dance(4, &td);
+
+    // TD 5: KC_KP_DOT (tap) / KC_PCMM (hold) / KC_KP_DOT (tap-hold, repeating)
+    td.on_tap = KC_KP_DOT; td.on_hold = KC_PCMM; td.on_double_tap = KC_NO; td.on_tap_hold = KC_KP_DOT;
+    td.custom_tapping_term = 200;
+    dynamic_keymap_set_tap_dance(5, &td);
+
+    // TD 6: KC_KP_0 (tap) / KC_PEQL (hold) / KC_KP_0 (tap-hold, repeating)
+    td.on_tap = KC_KP_0; td.on_hold = KC_PEQL; td.on_double_tap = KC_NO; td.on_tap_hold = KC_KP_0;
+    td.custom_tapping_term = 200;
+    dynamic_keymap_set_tap_dance(6, &td);
+#endif
+
+    // Finalize the sync
+    vial_init();
+}
+#endif
+
+/**
+ * KEYMAP DATA
+ * Layout for each layer (TOTEM 38-key LAYOUT).
+ * Outer bottom keys: LSFT_T(KC_TAB) (left) / RSFT_T(KC_ENTER) (right) on base,
+ * KC_TRNS elsewhere. Right outer thumb uses TD(0).
+ */
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
-    /*
-      ┌─────────────────────────────────────────────────┐
-      │ q w e r t y                                     │      ╭╮╭╮╭╮╭╮
-      └─────────────────────────────────────────────────┘      │╰╯╰╯╰╯│
-                ┌─────────┬─────────┬─────────┬─────────┬──────╨──┐┌──╨──────┬─────────┬─────────┬─────────┬─────────┐
-        ╌┄┈┈───═╡    Q    │    W    │    E    │    R    │    T    ││    Y    │    U    │    I    │    O    │    P    │
-                ├─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┤
-                │    A    │    S    │    D    │    F    │    G    ││    H    │    J    │    K    │    L    │    ;    │
-      ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐
-      │    Q    │    Z    │    X    │    C    │    V    │    B    ││    N    │    M    │    ,    │    .    │    /    │    P    │
-      └─────────┴─────────┴─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┴─────────┴─────────┘
-                                    │  CTRL   │  LOWER  │  SPACE  ││  ENTER  │  RAISE  │  BSPC   │
-                                    └─────────┴─────────┴─────────┘└─────────┴─────────┴─────────┘*/
+[_BASE] = LAYOUT(
+    KC_Q,           KC_W,          KC_E,          KC_R,          KC_T,             KC_Y,           KC_U,          KC_I,          KC_O,          KC_P,
+    LSFT_T(KC_A),   RALT_T(KC_S),  LT(_L3,KC_D),  LCTL_T(KC_F),  LALT_T(KC_G),     LALT_T(KC_H),   RCTL_T(KC_J),  LT(_L3,KC_K),  RALT_T(KC_L),  RSFT_T(KC_SCLN),
+    LSFT_T(KC_TAB), KC_Z,          KC_X,          KC_C,          RGUI_T(KC_V), KC_B,   KC_N, RGUI_T(KC_M), KC_COMM,   KC_DOT,        KC_SLSH,       RSFT_T(KC_ENTER),
+    OSL(_L4),       LT(_L6,KC_ESC), LGUI_T(KC_SPC),                                LGUI_T(KC_ENT), LT(_L5,KC_BSPC), TD(0)
+),
 
-    [_QWERTY] = LAYOUT(
-        // ╷         ╷         ╷         ╷         ╷         ╷         ╷╷         ╷         ╷         ╷         ╷         ╷         ╷
-        KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, GUI_A, ALT_S, CTL_D, SHT_F, KC_G, KC_H, SHT_J, CTL_K, ALT_L, GUI_S, KC_Q, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_P, KC_DEL, LOWER, KC_SPC, KC_ENT, RAISE, KC_BSPC),
+[_L1] = LAYOUT(
+    KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
+    KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
+    KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
+    KC_TRNS, KC_TRNS, KC_TRNS,                     KC_TRNS, KC_TRNS, KC_TRNS
+),
 
-    /*
+[_L2] = LAYOUT(
+    KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   TD(3),               KC_KP_7,         KC_KP_8,          KC_KP_9,         TD(6),
+    KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   LALT_T(KC_NUM_LOCK), RCTL_T(KC_KP_4), LT(_L3, KC_KP_5), RALT_T(KC_KP_6), RSFT_T(KC_PENT),
+    KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   TD(4), RGUI_T(KC_KP_1), KC_KP_2, KC_KP_3, TD(5), KC_TRNS,
+    KC_TRNS, TD(2), KC_TRNS,                       KC_TRNS, KC_TRNS, TD(1)
+),
 
-       ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
+[_L3] = LAYOUT(
+    KC_1,           KC_2,           KC_3,             KC_4,           KC_5,             KC_6,            KC_7,            KC_8,          KC_9,            KC_0,
+    LSFT_T(KC_ESC), RALT_T(KC_INS), LT(_L3,KC_DEL),   LCTL_T(KC_TAB), LALT_T(KC_BSPC),  LALT_T(KC_LEFT), RCTL_T(KC_DOWN), LT(_L3,KC_UP), RALT_T(KC_RGHT), RSFT_T(KC_ENT),
+    KC_TRNS, KC_GRV, KC_MINS, KC_EQL, RGUI_T(KC_LBRC), KC_RBRC,   KC_BSLS, RGUI_T(KC_QUOT), KC_COMM, KC_DOT, KC_SLSH, KC_TRNS,
+    KC_TRNS, TD(2), KC_TRNS,                          KC_TRNS, KC_TRNS, TD(1)
+),
 
-       ┌─────────────────────────────────────────────────┐
-       │ c o l e m a k                                   │      ╭╮╭╮╭╮╭╮
-       └─────────────────────────────────────────────────┘      │╰╯╰╯╰╯│
-                 ┌─────────┬─────────┬─────────┬─────────┬──────╨──┐┌──╨──────┬─────────┬─────────┬─────────┬─────────┐
-         ╌┄┈┈───═╡    Q    │    W    │    F    │    P    │    G    ││    J    │    L    │    U    │    Y    │    ;    │
-                 ├─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┤
-                 │    A    │    R    │    S    │    T    │    D    ││    H    │    N    │    E    │    I    │    O    │
-       ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐
-       │    Q    │    Z    │    X    │    C    │    V    │    B    ││    K    │    M    │    ,    │    .    │    /    │    ;    │
-       └─────────┴─────────┴─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┴─────────┴─────────┘
-                                     │   DEL   │  LOWER  │  SPACE  ││  ENTER  │  RAISE  │  BSPC   │
-                                     └─────────┴─────────┴─────────┘└─────────┴─────────┴─────────┘*/
+[_L4] = LAYOUT(
+    KC_F1,          KC_F2,          KC_F3,   KC_F4,           KC_F5,            KC_F6,          KC_F7,          KC_F8,   KC_F9,          KC_F10,
+    LSFT_T(KC_F11), RALT_T(KC_F12), KC_F13,  LCTL_T(KC_F14),  LALT_T(KC_F15),   LALT_T(KC_F16), RCTL_T(KC_F17), KC_F18,  RALT_T(KC_F19), RSFT_T(KC_F20),
+    KC_TRNS, KC_F21, KC_F22, KC_F23, RGUI_T(KC_F24), KC_NO,   KC_NO, RGUI_T(KC_NO), KC_NO, KC_NO, MO(_L7), KC_TRNS,
+    KC_TRNS, TD(2), KC_TRNS,                          KC_TRNS, KC_TRNS, TD(1)
+),
 
-    [_COLEMAK] = LAYOUT(
-        // ╷         ╷         ╷         ╷         ╷         ╷         ╷╷         ╷         ╷         ╷         ╷         ╷         ╷
-        KC_Q, KC_W, KC_F, KC_P, KC_G, KC_J, KC_L, KC_U, KC_Y, KC_SCLN, GUI_A, ALT_R, CTL_S, SHT_T, KC_D, KC_H, SHT_N, CTL_E, ALT_I, GUI_O, KC_Q, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_K, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_SCLN, KC_DEL, LOWER, KC_SPC, KC_ENT, RAISE, KC_BSPC),
+[_L5] = LAYOUT(
+    KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,      KC_HOME, KC_DEL,  KC_INS,  KC_END,  KC_BSPC,
+    KC_ESC,  KC_INS,  KC_DEL,  KC_TAB,  KC_BSPC,    KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_ENT,
+    KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_NO, KC_PGDN, KC_PGUP, KC_NO, KC_NO, KC_TRNS,
+    KC_TRNS, TD(2), KC_TRNS,                       KC_TRNS, KC_TRNS, TD(1)
+),
 
-    /*
-      ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
+[_L6] = LAYOUT(
+    KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,      KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,
+    MS_BTN5, MS_BTN1, MS_BTN3, MS_BTN2, MS_BTN4,    MS_LEFT, MS_DOWN, MS_UP,   MS_RGHT, MS_BTN1,
+    KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, KC_NO, KC_TRNS,
+    KC_TRNS, TD(2), KC_TRNS,                       KC_TRNS, KC_TRNS, TD(1)
+),
 
-      ┌─────────────────────────────────────────────────┐
-      │ l o w e r                                       │      ╭╮╭╮╭╮╭╮
-      └─────────────────────────────────────────────────┘      │╰╯╰╯╰╯│
-                ┌─────────┬─────────┬─────────┬─────────┬──────╨──┐┌──╨──────┬─────────┬─────────┬─────────┬─────────┐
-        ╌┄┈┈───═╡ CAPSLCK │ NUMLCK  │    ↑    │    =    │    {    ││    }    │    7    │    8    │    9    │    +    │
-                ├─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┤
-                │  HOME   │    ←    │    ↓    │    →    │    [    ││    ]    │    4    │    5    │    6    │    -    │
-      ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐
-      │ SCRNSHT │   END   │   PG↑   │  SAVE   │   PG↓   │    (    ││    )    │    1    │    2    │    3    │    *    │    ▼    │
-      └─────────┴─────────┴─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┴─────────┴─────────┘
-                                    │    ▼    │    ▼    │    ▼    ││    ▼    │ ADJUST  │    0    │
-                                    └─────────┴─────────┴─────────┘└─────────┴─────────┴─────────┘ */
-
-    [_LOWER] = LAYOUT(
-        // ╷         ╷         ╷         ╷         ╷         ╷         ╷╷         ╷         ╷         ╷         ╷         ╷         ╷
-        KC_CAPS, KC_NUM, KC_UP, KC_EQL, KC_LCBR, KC_RCBR, KC_P7, KC_P8, KC_P9, KC_PPLS, KC_QUOT, KC_LEFT, KC_DOWN, KC_RGHT, KC_LBRC, KC_RBRC, KC_P4, KC_P5, KC_P6, KC_MINS, SNAP, KC_END, KC_PGUP, C(KC_S), KC_PGDN, KC_LPRN, KC_RPRN, KC_P1, KC_P2, KC_P3, KC_PAST, _______, _______, _______, _______, _______, ADJUST, KC_P0),
-    /*
-      ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
-
-      ┌─────────────────────────────────────────────────┐
-      │ r a i s e                                       │      ╭╮╭╮╭╮╭╮
-      └─────────────────────────────────────────────────┘      │╰╯╰╯╰╯│
-                ┌─────────┬─────────┬─────────┬─────────┬──────╨──┐┌──╨──────┬─────────┬─────────┬─────────┬─────────┐
-        ╌┄┈┈───═╡    !    │    @    │    #    │    $    │    %    ││    ^    │    &    │    Ü    │    °    │    /    │
-                ├─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┤
-                │    Ä    │    è    │    SZ   │    é    │         ││         │    ¥    │    €    │    £    │    Ö    │
-      ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐
-      │         │    `    │    ~    │   CUE   │         │         ││         │         │         │ DM REC1 │ DM STOP │ DM PLY1 │
-      └─────────┴─────────┴─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┴─────────┴─────────┘
-                                    │  GIPHY  │ ADJUST  │    ▼    ││    ▼    │    ▼    │    ▼    │
-                                    └─────────┴─────────┴─────────┘└─────────┴─────────┴─────────┘ */
-
-    [_RAISE] = LAYOUT(
-        // ╷         ╷         ╷         ╷         ╷         ╷         ╷╷         ╷         ╷         ╷         ╷         ╷         ╷
-        KC_EXLM, KC_AT, KC_HASH, KC_DLR, KC_PERC, KC_CIRC, KC_AMPR, RALT(KC_U), RALT(KC_3), KC_BSLS, RALT(KC_A), RALT(KC_F), RALT(KC_S), RALT(KC_G), XXXXXXX, XXXXXXX, LSFT(RALT(KC_4)), RALT(KC_5), RALT(KC_4), RALT(KC_O), XXXXXXX, LSFT(KC_GRV), KC_TILD, RALT(KC_C), XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, DM_REC1, DM_RSTP, DM_PLY1, _______, ADJUST, _______, _______, _______, _______),
-    /*
-      ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
-
-      ┌─────────────────────────────────────────────────┐
-      │ a d j u s t                                     │      ╭╮╭╮╭╮╭╮
-      └─────────────────────────────────────────────────┘      │╰╯╰╯╰╯│
-                ┌─────────┬─────────┬─────────┬─────────┬──────╨──┐┌──╨──────┬─────────┬─────────┬─────────┬─────────┐
-        ╌┄┈┈───═╡  RESET  │         │         │         │         ││         │   F7    │   F8    │   F9    │   F12   │
-                ├─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┤
-                │ DEBUG   │ QWERTY  │         │         │         ││         │   F4    │   F5    │   F6    │   F11   │
-      ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐
-      │  MAKE   │ OS SWAP │ COLEMAK │         │         │         ││         │   F1    │   F2    │   F3    │   F10   │   F13   │
-      └─────────┴─────────┴─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┴─────────┴─────────┘
-                                    │    ▼    │    ▼    │    ▼    ││    ▼    │    ▼    │    ▼    │
-                                    └─────────┴─────────┴─────────┘└─────────┴─────────┴─────────┘ */
-
-    [_ADJUST] = LAYOUT(
-        // ╷         ╷         ╷         ╷         ╷         ╷         ╷╷         ╷         ╷         ╷         ╷         ╷         ╷
-        QK_BOOT, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_F7, KC_F8, KC_F9, KC_F12, DB_TOGG, QWERTY, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_F4, KC_F5, KC_F6, KC_F11, MAKE_H, OS_SWAP, COLEMAK, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_F1, KC_F2, KC_F3, KC_F10, KC_F13, _______, _______, _______, _______, _______, _______)
-    /*
-       ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
-
-       ┌─────────────────────────────────────────────────┐
-       │ t e m p l a t e                                 │      ╭╮╭╮╭╮╭╮
-       └─────────────────────────────────────────────────┘      │╰╯╰╯╰╯│
-                 ┌─────────┬─────────┬─────────┬─────────┬──────╨──┐┌──╨──────┬─────────┬─────────┬─────────┬─────────┐
-         ╌┄┈┈───═╡         │         │         │         │         ││         │         │         │         │         │
-                 ├─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┤
-                 │         │         │         │         │         ││         │         │         │         │         │
-       ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐
-       │         │         │         │         │         │         ││         │         │         │         │         │         │
-       └─────────┴─────────┴─────────┼─────────┼─────────┼─────────┤├─────────┼─────────┼─────────┼─────────┴─────────┴─────────┘
-                                     │         │         │         ││         │         │         │
-                                     └─────────┴─────────┴─────────┘└─────────┴─────────┴─────────┘
-
-       [_TEMPLATE] = LAYOUT(
-     //╷         ╷         ╷         ╷         ╷         ╷         ╷╷         ╷         ╷         ╷         ╷         ╷         ╷
-                  _______,  _______,  _______,  _______,   _______,  _______,  _______,  _______,  _______,   _______,
-                  _______,  _______,  _______,  _______,   _______,  _______,  _______,  _______,  _______,   _______,
-        _______,  _______,  _______,  _______,  _______,   _______,  _______,  _______,  _______,  _______,   _______, _______,
-                                      _______,  _______,   _______,  _______,  _______,  _______,
-     ),
-    */
+[_L7] = LAYOUT(
+    QK_BOOT,   QK_CLEAR_EEPROM, KC_NO, KC_NO, KC_NO,   KC_NO,   KC_BRID, KC_BRIU, KC_NO, KC_NO,
+    QK_REBOOT, KC_NO,           KC_NO, KC_NO, KC_NO,   KC_MUTE, KC_VOLD, KC_VOLU, KC_NO, KC_NO,
+    KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_MPLY, KC_MPRV, KC_MNXT, KC_NO, KC_NO, KC_TRNS,
+    KC_TRNS, TD(2), KC_TRNS,                      KC_TRNS, KC_TRNS, TD(1)
+)
 };
-
-// ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-// │ M A C R O S                                                                                                            │
-// └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-// ▝▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▘
-
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case OS_SWAP:
-            if (record->event.pressed) {
-                if (!keymap_config.swap_lctl_lgui) {
-                    keymap_config.swap_lctl_lgui = true; // ─── MAC
-                } else {
-                    keymap_config.swap_lctl_lgui = false; // ─── WIN
-                }
-                eeconfig_update_keymap(&keymap_config);
-                clear_keyboard(); // ──── clear to prevent stuck keys
-                return false;
-            }
-
-            // ┌─────────────────────────────────────────────────┐
-            // │ l a y e r                                       │
-            // └─────────────────────────────────────────────────┘
-
-        case COLEMAK:
-            if (record->event.pressed) {
-                set_single_persistent_default_layer(_COLEMAK);
-            }
-            return false;
-        case QWERTY:
-            if (record->event.pressed) {
-                set_single_persistent_default_layer(_QWERTY);
-            }
-            return false;
-
-            // ┌─────────────────────────────────────────────────┐
-            // │ q m k                                           │
-            // └─────────────────────────────────────────────────┘
-
-        case MAKE_H:
-            if (record->event.pressed) {
-                SEND_STRING("qmk compile -kb totem -km default");
-                tap_code(KC_ENTER);
-            }
-            break;
-
-            // ┌─────────────────────────────────────────────────┐
-            // │ p r o d u c t i v i t y                         │
-            // └─────────────────────────────────────────────────┘
-
-        case SNAP:
-            if (record->event.pressed) {
-                if (keymap_config.swap_lctl_lgui) {
-                    SEND_STRING(SS_LSFT(SS_LCMD(SS_LCTL("4")))); // MAC
-                } else {
-                    SEND_STRING(SS_LSFT(SS_LWIN("S"))); // WIN
-                }
-            }
-            break;
-    }
-    return true;
-}
-/*
-  ╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸
-
-
-                                                          ██████
-                                                            ██  ▄▄▄▄
-                                                            ██ ██▀▀██
-                                                            ▀▀ ██▄▄██
-                                                        ██████  ▀▀▀▀
-                                                          ██ ▄▄▄▄▄▄
-                                                          ██ ██▀▀▀▀
-                                                          ██ ██████
-                                                             ██▄▄▄▄
-                                                             ▀▀▀▀▀▀
-                                                           ████████
-                                                           ██ ██ ██
-                                                           ██ ██ ██
-                                                           ▀▀ ▀▀ ▀▀
-                                                          ████████
-
-*/
