@@ -33,5 +33,26 @@
 #undef LOCKING_SUPPORT_ENABLE
 #undef LOCKING_RESYNC_ENABLE
 
+// Mousekey acceleration tuning, ported from
+// qmk-firmware-musclememory-cheapinov2 keyboards/cheapino/config.h. QMK's
+// defaults (MOVE_DELTA=8, TIME_TO_MAX=30) ramp to max speed almost
+// immediately; these values give a finer, slower ramp.
+#ifdef MOUSEKEY_ENABLE
+    #undef MOUSEKEY_INTERVAL
+    #define MOUSEKEY_INTERVAL 16
+
+    #undef MOUSEKEY_INITIAL_SPEED
+    #define MOUSEKEY_INITIAL_SPEED 2
+
+    #undef MOUSEKEY_MOVE_DELTA
+    #define MOUSEKEY_MOVE_DELTA 1
+
+    #undef MOUSEKEY_MAX_SPEED
+    #define MOUSEKEY_MAX_SPEED 14
+
+    #undef MOUSEKEY_TIME_TO_MAX
+    #define MOUSEKEY_TIME_TO_MAX 100
+#endif
+
 #define DYNAMIC_KEYMAP_LAYER_COUNT 16
 
