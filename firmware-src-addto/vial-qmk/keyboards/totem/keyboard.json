@@ -17,7 +17,8 @@
     "diode_direction": "COL2ROW",
     "debounce": 5,
     "features": {
-        "swap_hands": true
+        "swap_hands": true,
+        "extrakey": true
     },
     "tapping": {
         "permissive_hold": true,
