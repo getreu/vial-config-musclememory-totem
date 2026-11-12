@@ -32,13 +32,22 @@
 enum layers { _BASE = 0, _L1, _L2, _L3, _L4, _L5, _L6, _L7 };
 
 /**
- * EEPROM INITIALIZATION - Set Default Combos and Tap Dances
- * This runs when EEPROM is reset (first flash or reset command).
- * Combos and tap dances are stored in EEPROM and can be reconfigured via Vial.
+ * Set Default Combos and Tap Dances. Called both from eeconfig_init_user()
+ * (classic EEPROM reset: first flash or QK_CLEAR_EEPROM) and from
+ * eeconfig_init_via_user() (a weak hook added to this vial-qmk checkout's
+ * quantum/via.c -- local patch, not upstream, see that file's comment for
+ * why), which fires right after Vial's own dynamic-keymap EEPROM region is
+ * wiped, whether by via_init()'s boot-time check (keyed to BUILD_ID, which
+ * changes every rebuild) or by Vial GUI's "Reset EEPROM" button
+ * (id_eeprom_reset), which never reboots and so gives a boot-time-only
+ * check nothing to observe. Combos and tap dances are stored in EEPROM and
+ * can be reconfigured via Vial; either trigger leaves them matching this
+ * source rather than stale or blank, same symptom and fix as
+ * qmk-vial-src-musclememory-cheapino2 hit on real cheapino hardware
+ * 2026-11-12.
  */
 #if defined(VIAL_COMBO_ENABLE) || defined(VIAL_TAP_DANCE_ENABLE)
-void eeconfig_init_user(void) {
-
+static void vial_seed_dynamic_defaults(void) {
 #ifdef VIAL_COMBO_ENABLE
     // Load Dynamic Combos (these write to EEPROM)
     vial_combo_entry_t combo = {0};
@@ -129,6 +138,14 @@ void eeconfig_init_user(void) {
 
     // Finalize the sync
     vial_init();
+}
+
+void eeconfig_init_user(void) {
+    vial_seed_dynamic_defaults();
+}
+
+void eeconfig_init_via_user(void) {
+    vial_seed_dynamic_defaults();
 }
 #endif
 
